@@ -171,7 +171,7 @@ export default function LandingPage() {
           ))}
         </div>
 
-        <div className="hidden md:flex items-center gap-3">
+        <div className="flex items-center gap-3 ml-auto md:ml-0">
           <button
             style={{
               color: "var(--primary)",
@@ -181,7 +181,8 @@ export default function LandingPage() {
               border: "1.5px solid var(--primary)",
               borderRadius: "var(--radius)",
             }}
-            className="hover:bg-[var(--secondary)] transition-colors"
+           
+            className="hidden md:block hover:bg-[var(--secondary)] transition-colors"
           >
             Sign In
           </button>
@@ -197,17 +198,16 @@ export default function LandingPage() {
             onClick={() => navigate("/chat")}
             className="hover:opacity-90 transition-opacity"
           >
-            Get Started Free
+            Get Started !!
+          </button>
+          <button
+            className="md:hidden ml-1"
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{ color: "var(--foreground)" }}
+          >
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
-
-        <button
-          className="md:hidden"
-          onClick={() => setMenuOpen(!menuOpen)}
-          style={{ color: "var(--foreground)" }}
-        >
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
       </nav>
 
       {/* Mobile menu */}
@@ -228,6 +228,20 @@ export default function LandingPage() {
           ))}
           <button
             style={{
+              color: "var(--primary)",
+              fontSize: "0.95rem",
+              fontWeight: 500,
+              padding: "0.65rem 1.2rem",
+              border: "1.5px solid var(--primary)",
+              borderRadius: "var(--radius)",
+              textAlign: "center",
+            }}
+            onClick={() => setMenuOpen(false)}
+          >
+            Sign In
+          </button>
+          <button
+            style={{
               background: "var(--primary)",
               color: "#fff",
               fontWeight: 500,
@@ -237,13 +251,13 @@ export default function LandingPage() {
             }}
             onClick={() => navigate("/chat")}
           >
-            Get Started Free
+            Get Started - It's Free
           </button>
         </div>
       )}
 
       {/* Hero */}
-      <section className="relative min-h-screen flex items-center pt-20">
+      <section className="relative min-h-screen flex flex-col pt-20">
         <div
           className="absolute inset-0 z-0"
           style={{
@@ -260,7 +274,8 @@ export default function LandingPage() {
           }}
         />
 
-        <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-12 py-24 md:py-32 grid md:grid-cols-2 gap-16 items-center">
+        <div className="relative z-10 flex-1 flex items-center w-full pb-20 md:pb-0">
+          <div className="max-w-7xl mx-auto px-6 md:px-12 xl:px-16 py-12 md:py-24 xl:py-32 grid grid-cols-1 md:grid-cols-2 gap-12 xl:gap-20 items-center w-full">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -326,7 +341,7 @@ export default function LandingPage() {
                 onClick={() => navigate("/chat")}
                 className="hover:opacity-90 transition-opacity"
               >
-                Start for Free <ChevronRight size={18} />
+                Get Started!! <ChevronRight size={18} />
               </button>
               <button
                 style={{
@@ -425,10 +440,11 @@ export default function LandingPage() {
             </div>
           </motion.div>
         </div>
+        </div>
 
         {/* Stats bar */}
         <div
-          className="absolute bottom-0 left-0 right-0 z-10"
+          className="relative md:absolute bottom-0 left-0 right-0 z-10 w-full"
           style={{ background: "rgba(26,28,20,0.85)", backdropFilter: "blur(10px)" }}
         >
           <div className="max-w-5xl mx-auto px-6 md:px-12 py-5 grid grid-cols-2 md:grid-cols-4 gap-6">
