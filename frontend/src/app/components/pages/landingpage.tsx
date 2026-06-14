@@ -50,13 +50,7 @@ const features = [
       "Understand your soil composition, pH levels, and fertility status. Get tailored fertilizer and amendment recommendations.",
     color: "#5a8f3c",
   },
-  {
-    icon: CloudRain,
-    title: "Weather-Aware Planning",
-    description:
-      "Integrated weather intelligence synced to your field location. Plan irrigation, spraying, and harvesting around real conditions.",
-    color: "#3b7d56",
-  },
+  
   {
     icon: BarChart3,
     title: "Yield Analytics",
@@ -64,13 +58,7 @@ const features = [
       "Track crop performance season over season. Visualize yield trends and get AI-driven suggestions to maximise output.",
     color: "#2d6a2f",
   },
-  {
-    icon: MapPin,
-    title: "Field Mapping",
-    description:
-      "Mark and monitor multiple fields from a single dashboard. Assign supervisors, log observations, and build field history.",
-    color: "#7ab648",
-  },
+ 
 ];
 
 const steps = [
@@ -91,32 +79,13 @@ const steps = [
   },
 ];
 
-const testimonials = [
-  {
-    name: "Rajesh Kumar",
-    role: "Wheat Farmer, Punjab",
-    body: "KRISHI SAARTHI helped me catch a fungal infection early. Saved nearly 40% of my crop this season.",
-    rating: 5,
-  },
-  {
-    name: "Sunita Devi",
-    role: "Field Supervisor, Maharashtra",
-    body: "Managing 12 farms used to be chaotic. Now I get daily AI briefings on each field in minutes.",
-    rating: 5,
-  },
-  {
-    name: "Arjun Patel",
-    role: "Progressive Farmer, Gujarat",
-    body: "The soil health tool told me exactly what was missing. My tomato yield went up 25% after following the advice.",
-    rating: 5,
-  },
-];
+
 
 const stats = [
-  { value: "10,000+", label: "Farmers Assisted" },
-  { value: "94%", label: "Crop Loss Prevented" },
-  { value: "3.2×", label: "Average Yield Increase" },
-  { value: "12", label: "Crop Types Supported" },
+  { value: "No.1", label: "AI Powered Agri-Assistant" },
+  { value: "95%", label: "accuracy" },
+  { value: "Make 2x", label: "Crop Yield" },
+  { value: "Uttrakhand", label: "Agri-Booster" },
 ];
 
 export default function LandingPage() {
@@ -159,7 +128,7 @@ export default function LandingPage() {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-8">
-          {["Features", "How It Works", "Testimonials"].map((item) => (
+          {["Features", "How It Works"].map((item) => (
             <a
               key={item}
               href={`#${item.toLowerCase().replace(/ /g, "-")}`}
@@ -216,7 +185,7 @@ export default function LandingPage() {
           className="fixed top-[61px] left-0 right-0 z-40 flex flex-col gap-4 px-6 py-6"
           style={{ background: "var(--background)", borderBottom: "1px solid var(--border)" }}
         >
-          {["Features", "How It Works", "Testimonials"].map((item) => (
+          {["Features", "How It Works"].map((item) => (
             <a
               key={item}
               href={`#${item.toLowerCase().replace(/ /g, "-")}`}
@@ -509,7 +478,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {features.map((f, i) => (
               <motion.div
                 key={f.title}
@@ -655,93 +624,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section id="testimonials" className="py-24 md:py-32">
-        <div className="max-w-6xl mx-auto px-6 md:px-12">
-          <div className="text-center mb-16">
-            <span
-              style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: "0.75rem",
-                letterSpacing: "0.1em",
-                color: "var(--accent)",
-                textTransform: "uppercase",
-              }}
-            >
-              Farmer Stories
-            </span>
-            <h2
-              style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)",
-                fontWeight: 700,
-                color: "var(--foreground)",
-                marginTop: "0.6rem",
-                lineHeight: 1.2,
-              }}
-            >
-              Trusted Across the Fields
-            </h2>
-          </div>
+    
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={t.name}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="rounded-2xl p-6"
-                style={{
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                }}
-              >
-                <div className="flex gap-1 mb-4">
-                  {Array.from({ length: t.rating }).map((_, j) => (
-                    <Star key={j} size={14} fill="var(--accent)" color="var(--accent)" />
-                  ))}
-                </div>
-                <p
-                  style={{
-                    color: "var(--foreground)",
-                    fontSize: "0.95rem",
-                    lineHeight: 1.7,
-                    fontStyle: "italic",
-                    marginBottom: "1.25rem",
-                  }}
-                >
-                  "{t.body}"
-                </p>
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center"
-                    style={{ background: "var(--secondary)" }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: "'Playfair Display', serif",
-                        fontWeight: 700,
-                        color: "var(--primary)",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      {t.name[0]}
-                    </span>
-                  </div>
-                  <div>
-                    <p style={{ fontWeight: 600, fontSize: "0.88rem", color: "var(--foreground)" }}>
-                      {t.name}
-                    </p>
-                    <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)" }}>{t.role}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+         
+    
 
       {/* CTA */}
       <section
