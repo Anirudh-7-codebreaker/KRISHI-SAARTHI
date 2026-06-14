@@ -30,6 +30,7 @@ interface ChatMessage {
   role: "user" | "ai";
   type: "text" | "image" | "recommendation";
   text?: string;
+  textHindi?: string;
   imageFile?: string;
   recommendation?: Recommendation;
   timestamp: string;
@@ -37,17 +38,23 @@ interface ChatMessage {
 
 interface Recommendation {
   diagnosis: string;
+  diagnosisHindi?: string;
   confidence: number;
   treatment: TreatmentStep[];
   dosage: string;
+  dosageHindi?: string;
   warning: string;
+  warningHindi?: string;
   followUp: string;
+  followUpHindi?: string;
 }
 
 interface TreatmentStep {
   step: number;
   action: string;
+  actionHindi?: string;
   detail: string;
+  detailHindi?: string;
 }
 
 interface HistoryItem {
@@ -72,6 +79,7 @@ const SEED_MESSAGES: ChatMessage[] = [
     role: "ai",
     type: "text",
     text: "Namaste! 🌿 I'm Krishi AI, your intelligent field assistant. Describe your crop issue, upload a field photo, or ask anything about soil, pests, or weather — I'm here to help.",
+    textHindi: "नमस्ते! 🌿 मैं कृषि AI हूँ, आपका बुद्धिमान फील्ड सहायक। अपनी फसल की समस्या बताएं, खेत की फोटो अपलोड करें, या मिट्टी, कीट या मौसम के बारे में कुछ भी पूछें - मैं आपकी मदद के लिए यहाँ हूँ।",
     timestamp: "09:00 AM",
   },
   {
@@ -79,6 +87,7 @@ const SEED_MESSAGES: ChatMessage[] = [
     role: "user",
     type: "text",
     text: "My cotton leaves have dark brown circular spots with yellow edges and some are wilting. This started 3 days ago in the eastern block.",
+    textHindi: "मेरे कपास के पत्तों पर पीले किनारों वाले गहरे भूरे रंग के गोलाकार धब्बे हैं और कुछ मुरझा रहे हैं। यह 3 दिन पहले पूर्वी ब्लॉक में शुरू हुआ था।",
     timestamp: "09:02 AM",
   },
   {
@@ -95,38 +104,50 @@ const SEED_MESSAGES: ChatMessage[] = [
     recommendation: {
       diagnosis:
         "Alternaria Leaf Blight (Alternaria macrospora) — a fungal infection thriving in warm, humid conditions. Symptoms match early-to-mid stage progression. Confidence: 91%.",
+      diagnosisHindi: "अल्टरनेरिया लीफ ब्लाइट (अल्टरनेरिया मैक्रोस्पोरा) — गर्म, आर्द्र परिस्थितियों में पनपने वाला एक कवक संक्रमण। लक्षण शुरुआती-से-मध्य चरण की प्रगति से मेल खाते हैं। विश्वास: 91%।",
       confidence: 91,
       treatment: [
         {
           step: 1,
           action: "Isolate Affected Rows",
+          actionHindi: "प्रभावित पंक्तियों को अलग करें",
           detail:
             "Immediately mark the eastern block and avoid moving equipment from that zone to prevent spore spread.",
+          detailHindi: "तुरंत पूर्वी ब्लॉक को चिह्नित करें और बीजाणु प्रसार को रोकने के लिए उस क्षेत्र से उपकरणों को स्थानांतरित करने से बचें।",
         },
         {
           step: 2,
           action: "Apply Mancozeb Fungicide",
+          actionHindi: "मैनकोज़ेब कवकनाशी लगाएं",
           detail:
             "Spray Mancozeb 75% WP as a preventative and curative measure. Ensure full leaf coverage including undersides.",
+          detailHindi: "निवारक और उपचारात्मक उपाय के रूप में मैनकोज़ेब 75% WP का छिड़काव करें। पत्तियों के नीचे के हिस्से सहित पूर्ण कवरेज सुनिश्चित करें।",
         },
         {
           step: 3,
           action: "Remove Fallen Debris",
+          actionHindi: "गिरे हुए मलबे को हटा दें",
           detail:
             "Collect and burn infected leaf litter. Do not compost — spores survive decomposition.",
+          detailHindi: "संक्रमित पत्तों के कूड़े को इकट्ठा करें और जला दें। खाद न बनाएं - बीजाणु सड़ने के बाद भी जीवित रहते हैं।",
         },
         {
           step: 4,
           action: "Monitor Humidity",
+          actionHindi: "नमी की निगरानी करें",
           detail:
             "Improve canopy airflow by thinning overcrowded plants. Avoid overhead irrigation for the next 10 days.",
+          detailHindi: "भीड़भाड़ वाले पौधों को पतला करके कैनोपी वायु प्रवाह में सुधार करें। अगले 10 दिनों तक ओवरहेड सिंचाई से बचें।",
         },
       ],
       dosage: "Mancozeb 75% WP — 2.0 kg / acre. Dilute in 200 L water. Apply at 7-day intervals × 3 sprays.",
+      dosageHindi: "मैनकोज़ेब 75% WP — 2.0 किलोग्राम / एकड़। 200 लीटर पानी में घोलें। 7 दिनों के अंतराल पर 3 छिड़काव करें।",
       warning:
         "Do not apply within 21 days of harvest. Wear PPE during application. Avoid spraying in windy conditions above 15 km/h.",
+      warningHindi: "कटाई के 21 दिनों के भीतर आवेदन न करें। आवेदन के दौरान पीपीई पहनें। 15 किमी/घंटा से अधिक हवा की स्थिति में छिड़काव से बचें।",
       followUp:
         "Re-assess in 5 days. If lesions continue expanding despite treatment, escalate to Tebuconazole 25% EC at 200 mL/acre.",
+      followUpHindi: "5 दिनों में पुन: मूल्यांकन करें। यदि उपचार के बावजूद घाव फैलते रहते हैं, तो 200 मिलीलीटर/एकड़ पर टेबुकोनाज़ोल 25% EC तक बढ़ाएं।",
     },
     timestamp: "09:03 AM",
   },
@@ -247,7 +268,7 @@ function ImageBubble({ file }: { file: string }) {
   );
 }
 
-function RecommendationCard({ rec, labels }: { rec: Recommendation; labels: Record<string, string> }) {
+function RecommendationCard({ rec, lang, labels }: { rec: Recommendation; lang: Lang; labels: Record<string, string> }) {
   return (
     <div
       className="rounded-2xl overflow-hidden"
@@ -305,7 +326,7 @@ function RecommendationCard({ rec, labels }: { rec: Recommendation; labels: Reco
           </span>
         </div>
         <p style={{ color: "var(--foreground)", fontSize: "0.88rem", lineHeight: 1.65 }}>
-          {rec.diagnosis}
+          {lang === "hi" && rec.diagnosisHindi ? rec.diagnosisHindi : rec.diagnosis}
         </p>
       </div>
 
@@ -345,10 +366,10 @@ function RecommendationCard({ rec, labels }: { rec: Recommendation; labels: Reco
               </div>
               <div>
                 <p style={{ fontWeight: 600, fontSize: "0.87rem", color: "var(--foreground)", marginBottom: "0.15rem" }}>
-                  {t.action}
+                  {lang === "hi" && t.actionHindi ? t.actionHindi : t.action}
                 </p>
                 <p style={{ fontSize: "0.82rem", color: "var(--muted-foreground)", lineHeight: 1.55 }}>
-                  {t.detail}
+                  {lang === "hi" && t.detailHindi ? t.detailHindi : t.detail}
                 </p>
               </div>
             </div>
@@ -383,7 +404,7 @@ function RecommendationCard({ rec, labels }: { rec: Recommendation; labels: Reco
             lineHeight: 1.6,
           }}
         >
-          {rec.dosage}
+          {lang === "hi" && rec.dosageHindi ? rec.dosageHindi : rec.dosage}
         </div>
       </div>
 
@@ -407,7 +428,7 @@ function RecommendationCard({ rec, labels }: { rec: Recommendation; labels: Reco
             >
               {labels.warning}
             </p>
-            <p style={{ fontSize: "0.82rem", color: "#9b1530", lineHeight: 1.55 }}>{rec.warning}</p>
+            <p style={{ fontSize: "0.82rem", color: "#9b1530", lineHeight: 1.55 }}>{lang === "hi" && rec.warningHindi ? rec.warningHindi : rec.warning}</p>
           </div>
         </div>
       </div>
@@ -426,7 +447,7 @@ function RecommendationCard({ rec, labels }: { rec: Recommendation; labels: Reco
         >
           {labels.followUp}
         </p>
-        <p style={{ fontSize: "0.85rem", color: "var(--foreground)", lineHeight: 1.6 }}>{rec.followUp}</p>
+        <p style={{ fontSize: "0.85rem", color: "var(--foreground)", lineHeight: 1.6 }}>{lang === "hi" && rec.followUpHindi ? rec.followUpHindi : rec.followUp}</p>
       </div>
     </div>
   );
@@ -434,9 +455,11 @@ function RecommendationCard({ rec, labels }: { rec: Recommendation; labels: Reco
 
 function MessageBubble({
   msg,
+  lang,
   labels,
 }: {
   msg: ChatMessage;
+  lang: Lang;
   labels: Record<string, string>;
 }) {
   const isUser = msg.role === "user";
@@ -481,7 +504,7 @@ function MessageBubble({
           >
             {labels.krishi} · {msg.timestamp}
           </span>
-          <RecommendationCard rec={msg.recommendation!} labels={labels} />
+          <RecommendationCard rec={msg.recommendation!} lang={lang} labels={labels} />
         </div>
       </motion.div>
     );
@@ -529,7 +552,7 @@ function MessageBubble({
             lineHeight: 1.65,
           }}
         >
-          {msg.text}
+          {lang === "hi" && msg.textHindi ? msg.textHindi : msg.text}
         </div>
       </div>
     </motion.div>
@@ -542,7 +565,7 @@ export default function ChatbotPage() {
   const [messages, setMessages] = useState<ChatMessage[]>(SEED_MESSAGES);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
-  const [activeHistory, setActiveHistory] = useState("h4");
+  const [activeHistory, setActiveHistory] = useState("h1");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [micActive, setMicActive] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -573,10 +596,8 @@ export default function ChatbotPage() {
         id: `m${Date.now() + 1}`,
         role: "ai",
         type: "text",
-        text:
-          lang === "en"
-            ? "Thank you for the details. Based on your description, I'm analysing the symptoms. Could you also share the current weather conditions in your area and the last irrigation date?"
-            : "जानकारी के लिए धन्यवाद। आपके विवरण के आधार पर, मैं लक्षणों का विश्लेषण कर रहा हूँ। क्या आप अपने क्षेत्र की वर्तमान मौसम स्थिति और अंतिम सिंचाई की तारीख भी बता सकते हैं?",
+        text: "Thank you for the details. Based on your description, I'm analysing the symptoms. Could you also share the current weather conditions in your area and the last irrigation date?",
+        textHindi: "जानकारी के लिए धन्यवाद। आपके विवरण के आधार पर, मैं लक्षणों का विश्लेषण कर रहा हूँ। क्या आप अपने क्षेत्र की वर्तमान मौसम स्थिति और अंतिम सिंचाई की तारीख भी बता सकते हैं?",
         timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, aiMsg]);
@@ -682,7 +703,7 @@ export default function ChatbotPage() {
               fontSize: "0.9rem",
             }}
           >
-            <Plus size={16} />
+            <Plus size={50} />
             {labels.newConsult}
           </button>
         </div>
@@ -693,7 +714,7 @@ export default function ChatbotPage() {
             className="mb-3"
             style={{
               fontFamily: "'DM Mono', monospace",
-              fontSize: "0.65rem",
+              fontSize: "1.65rem",
               letterSpacing: "0.1em",
               color: "rgba(255,255,255,0.35)",
               textTransform: "uppercase",
@@ -791,7 +812,7 @@ export default function ChatbotPage() {
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:bg-white/5"
             style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.87rem" }}
           >
-            <Settings size={16} color="rgba(255,255,255,0.35)" />
+            <Settings size={27} color="rgba(255,255,255,0.35)" />
             <span>{labels.settings}</span>
           </button>
         </div>
@@ -870,7 +891,7 @@ export default function ChatbotPage() {
         >
           <div className="max-w-3xl mx-auto">
             {messages.map((msg) => (
-              <MessageBubble key={msg.id} msg={msg} labels={labels} />
+              <MessageBubble key={msg.id} msg={msg} lang={lang} labels={labels} />
             ))}
             {typing && <TypingIndicator />}
             <div ref={bottomRef} />
@@ -967,7 +988,7 @@ export default function ChatbotPage() {
                   color: "#fff",
                 }}
               >
-                <Send size={15} />
+                <Send size={17} />
               </button>
             </div>
 
