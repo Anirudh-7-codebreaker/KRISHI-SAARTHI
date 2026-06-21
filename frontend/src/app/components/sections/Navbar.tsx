@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Leaf, Menu, X } from "lucide-react";
+import { Leaf, Menu, X, Sun, Moon } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../../context/ThemeContext";
 
 export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const { theme, toggleTheme } = useTheme();
 
   const navLinks = [
     { name: t("navbar.about"), href: "#about" },
@@ -19,9 +21,9 @@ export function Navbar() {
       <nav
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4"
         style={{
-          background: "rgba(247, 245, 240, 0.92)",
+          background: "var(--navbar-bg)",
           backdropFilter: "blur(12px)",
-          borderBottom: "1px solid rgba(45, 106, 47, 0.12)",
+          borderBottom: "1px solid var(--border)",
         }}
       >
         <div className="flex items-center gap-2">
@@ -29,7 +31,7 @@ export function Navbar() {
             className="w-8 h-8 rounded-full flex items-center justify-center"
             style={{ background: "var(--primary)" }}
           >
-            <Leaf size={16} color="#fff" />
+            <Leaf size={16} color="var(--primary-foreground)" />
           </div>
           <span
             style={{
@@ -50,7 +52,7 @@ export function Navbar() {
               key={item.name}
               href={item.href}
               className="text-[var(--muted-foreground)] text-sm font-medium hover:text-[var(--primary)] transition-colors"
-              
+
             >
               {item.name}
             </a>
@@ -59,17 +61,25 @@ export function Navbar() {
 
         <div className="flex items-center gap-3 ml-auto md:ml-0">
           <button
-                       className="hidden md:block text-[var(--primary)] text-sm font-medium px-4 py-2 border-[1.5px] border-[var(--primary)] rounded-[var(--radius)] hover:bg-[var(--secondary)] transition-colors"
-            
+            className="hidden md:block text-[var(--primary)] text-sm font-medium px-4 py-2 border-[1.5px] border-[var(--primary)] rounded-[var(--radius)] hover:bg-[var(--secondary)] transition-colors"
+
           >
-                   {t("navbar.signIn")}
+            {t("navbar.signIn")}
           </button>
           <button
-          
+
             onClick={() => navigate("/chat")}
-            className="bg-[var(--primary)] text-white text-sm font-medium px-4 py-2 rounded-[var(--radius)] hover:opacity-90 transition-opacity"
+            className="bg-[var(--primary)] text-[var(--primary-foreground)] text-sm font-medium px-4 py-2 rounded-[var(--radius)] hover:opacity-90 transition-opacity"
           >
-                   {t("navbar.getStarted")}
+            {t("navbar.getStarted")}
+          </button>
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="hidden md:flex text-[var(--primary)] p-2 border-[1.5px] border-[var(--primary)] rounded-[var(--radius)] hover:bg-[var(--secondary)] transition-colors items-center justify-center"
+            aria-label="Toggle Theme"
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
           {/* Language Toggle */}
           <button
@@ -87,7 +97,7 @@ export function Navbar() {
           </button>
         </div>
       </nav>
-         
+
 
       {/* Mobile menu */}
       {menuOpen && (
@@ -112,7 +122,7 @@ export function Navbar() {
             {t("navbar.signIn")}
           </button>
           <button
-            className="w-full bg-[var(--primary)] text-white font-medium py-3 rounded-[var(--radius)]"
+            className="w-full bg-[var(--primary)] text-[var(--primary-foreground)] font-medium py-3 rounded-[var(--radius)]"
             onClick={() => { navigate("/chat"); setMenuOpen(false); }}
           >
             {t("navbar.getStarted")}
@@ -122,10 +132,17 @@ export function Navbar() {
             className="w-full py-3 border border-[var(--primary)] text-[var(--primary)] rounded-[var(--radius)] font-medium"
           >
             {i18n.language === 'en' ? 'हिन्दी' : 'English'}
-                 </button>
+          </button>
+          <button
+            onClick={() => { toggleTheme(); setMenuOpen(false); }}
+            className="w-full flex items-center justify-center gap-2 py-3 border border-[var(--primary)] text-[var(--primary)] rounded-[var(--radius)] font-medium"
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            {theme === "dark" ? "Light Mode" : "Dark Mode"}
+          </button>
         </div>
       )}
-     
+
     </>
   );
 }

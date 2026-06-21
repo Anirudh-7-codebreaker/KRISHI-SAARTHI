@@ -7,7 +7,7 @@ export function CTA() {
   const { t } = useTranslation();
 
   return (
-    <section className="py-24 md:py-32 relative overflow-hidden" style={{ background: "var(--primary)" }}>
+    <section className="py-24 md:py-32 relative overflow-hidden" style={{ background: "var(--cta-bg)" }}>
       <div
         className="absolute inset-0 opacity-10"
         style={{ backgroundImage: "radial-gradient(circle at 70% 50%, #a5d67a 0%, transparent 60%)" }}

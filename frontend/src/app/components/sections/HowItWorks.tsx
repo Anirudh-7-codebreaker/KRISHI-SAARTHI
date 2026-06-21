@@ -28,7 +28,7 @@ export function HowItWorks() {
   const { t } = useTranslation();
 
   return (
-    <section id="how-it-works" className="py-14 md:py-20" style={{ background: "#f1f8ed" }}>
+    <section id="how-it-works" className="py-14 md:py-20" style={{ background: "var(--section-bg)" }}>
       <div className="max-w-6xl mx-auto px-6 md:px-12 grid md:grid-cols-2 gap-16 items-center">
         <div>
           <span

@@ -33,7 +33,7 @@ export function Features() {
   const { t } = useTranslation();
 
   return (
-    <section id="features" className="py-14 md:py-20" style={{ background: "#f1f8ed" }}>
+    <section id="features" className="py-14 md:py-20" style={{ background: "var(--section-bg)" }}>
       <div className="max-w-6xl mx-auto px-6 md:px-12">
         <div className="text-center mb-16">
           <span
@@ -81,8 +81,8 @@ export function Features() {
               transition={{ duration: 0.5, delay: i * 0.08 }}
               className="group rounded-2xl p-6 transition-shadow hover:shadow-lg"
               style={{
-                background: "#e8f5df",
-                border: "1px solid rgba(45, 106, 47, 0.15)",
+                background: "var(--card-bg)",
+                border: "1px solid var(--border)",
               }}
             >
               <div

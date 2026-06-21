@@ -33,7 +33,7 @@ export function About() {
   const { t } = useTranslation();
 
   return (
-    <section id="about" className="py-14 md:py-20" style={{ background: "#f1f8ed" }}>
+    <section id="about" className="py-14 md:py-20" style={{ background: "var(--section-bg)" }}>
       <div className="max-w-6xl mx-auto px-6 md:px-12">
         <div className="grid md:grid-cols-2 gap-16 items-center">
           {/* Left: Mission text */}
@@ -111,7 +111,7 @@ export function About() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
                 className="flex gap-4 items-start p-4 rounded-2xl"
-                style={{ background: "#e8f5df", border: "1px solid rgba(45,106,47,0.15)" }}
+                style={{ background: "var(--card-bg)", border: "1px solid var(--border)" }}
               >
                 <div
                   className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"

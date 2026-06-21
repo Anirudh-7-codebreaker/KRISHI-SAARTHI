@@ -39,6 +39,13 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Added layout specific variables for light/dark mode */
+  --section-bg: #f1f8ed;
+  --card-bg: #e8f5df;
+  --navbar-bg: rgba(247, 245, 240, 0.92);
+  --cta-bg: var(--primary);
+  --cta-text: #ffffff;
 }
 
 .dark {
@@ -76,6 +83,13 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+
+  /* Added layout specific variables for light/dark mode */
+  --section-bg: oklch(0.18 0 0);
+  --card-bg: oklch(0.22 0 0);
+  --navbar-bg: rgba(26, 28, 20, 0.92);
+  --cta-bg: oklch(0.18 0 0);
+  --cta-text: oklch(0.985 0 0);
 }
 
 @theme inline {
