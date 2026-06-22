@@ -94,5 +94,29 @@
     "privacy": "गोपनीयता",
     "terms": "शर्तें",
     "contact": "संपर्क"
+  },
+  "signIn": {
+    "title": "साइन इन करें",
+    "description": "आपका स्वागत है! अपने स्मार्ट फार्म साथी तक पहुंचें।",
+    "googleButton": "Google के साथ जारी रखें",
+    "phoneButton": "फोन नंबर",
+    "emailButton": "ईमेल पता",
+    "phonePlaceholder": "अपना मोबाइल नंबर दर्ज करें",
+    "otpPlaceholder": "6-अंकीय ओटीपी दर्ज करें",
+    "emailPlaceholder": "अपना ईमेल पता दर्ज करें",
+    "passwordPlaceholder": "अपना पासवर्ड दर्ज करें",
+    "sendOtp": "ओटीपी भेजें",
+    "verifyOtp": "ओटीपी सत्यापित करें",
+    "login": "साइन इन करें",
+    "back": "होम पर वापस जाएं",
+    "dontHaveAccount": "खाता नहीं है?",
+    "register": "यहाँ पंजीकरण करें",
+    "phoneLabel": "मोबाइल नंबर",
+    "emailLabel": "ईमेल पता",
+    "passwordLabel": "पासवर्ड",
+    "otpLabel": "ओटीपी कोड",
+    "or": "या इनके माध्यम से जुड़ें",
+    "successMessage": "सफलतापूर्वक साइन इन किया गया!",
+    "otpSentMessage": "आपके मोबाइल नंबर पर ओटीपी भेजा गया है!"
   }
 }

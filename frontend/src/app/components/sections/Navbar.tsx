@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Leaf, Menu, X, Sun, Moon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../context/ThemeContext";
+import Login from "./SignIn";
 
 export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -62,7 +63,7 @@ export function Navbar() {
         <div className="flex items-center gap-3 ml-auto md:ml-0">
           <button
             className="hidden md:block text-[var(--primary)] text-sm font-medium px-4 py-2 border-[1.5px] border-[var(--primary)] rounded-[var(--radius)] hover:bg-[var(--secondary)] transition-colors"
-
+            onClick={() => navigate("/Login")}
           >
             {t("navbar.signIn")}
           </button>
@@ -117,7 +118,7 @@ export function Navbar() {
           ))}
           <button
             className="w-full py-3 border border-[var(--primary)] text-[var(--primary)] rounded-[var(--radius)] font-medium"
-            onClick={() => setMenuOpen(false)}
+            onClick={() => navigate("/Login")}
           >
             {t("navbar.signIn")}
           </button>
