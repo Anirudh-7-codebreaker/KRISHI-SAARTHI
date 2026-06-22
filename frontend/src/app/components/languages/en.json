@@ -129,5 +129,29 @@
     "weeksAgo": "{{count}} weeks ago",
     "dayAgo": "{{count}} day ago",
     "weekAgo": "{{count}} week ago"
+  },
+  "signIn": {
+    "title": "Sign In",
+    "description": "Welcome back! Access your smart farm companion.",
+    "googleButton": "Continue with Google",
+    "phoneButton": "Phone Number",
+    "emailButton": "Email Address",
+    "phonePlaceholder": "Enter mobile number",
+    "otpPlaceholder": "Enter 6-digit OTP",
+    "emailPlaceholder": "Enter email address",
+    "passwordPlaceholder": "Enter password",
+    "sendOtp": "Send OTP",
+    "verifyOtp": "Verify OTP & Sign In",
+    "login": "Sign In",
+    "back": "Back to Home",
+    "dontHaveAccount": "Don't have an account?",
+    "register": "Register here",
+    "phoneLabel": "Mobile Number",
+    "emailLabel": "Email Address",
+    "passwordLabel": "Password",
+    "otpLabel": "OTP Code",
+    "or": "or connect with",
+    "successMessage": "Signed in successfully!",
+    "otpSentMessage": "OTP sent to your mobile number!"
   }
 }
