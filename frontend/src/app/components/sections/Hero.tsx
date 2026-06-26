@@ -62,7 +62,9 @@ export function Hero() {
               >
                 {t("hero.getStartedButton")} <ChevronRight size={18} />
               </button>
-              <button className="border border-white/35 text-white font-medium px-7 py-3 rounded-[var(--radius)] hover:border-white/70 transition-colors">
+              <button
+                onClick={() => window.open('https://youtu.be/JeU_EYFH1Jk?si=FLBLa0H_bUSyd4Om', '_blank', 'noopener,noreferrer')}
+                className="border border-white/35 text-white font-medium px-7 py-3 rounded-[var(--radius)] hover:border-white/70 transition-colors">
                 {t("hero.watchDemoButton")}
               </button>
             </div>
