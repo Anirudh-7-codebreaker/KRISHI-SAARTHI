@@ -1,0 +1,157 @@
+{
+  "navbar": {
+    "brand": "KRISHI SAARTHI",
+    "about": "About",
+    "features": "Features",
+    "howItWorks": "How It Works",
+    "signIn": "Sign In",
+    "getStarted": "Get Started !!",
+    "languageToggle": "Language"
+  },
+  "hero": {
+    "fieldAssistant": "AI-POWERED FIELD ASSISTANT",
+    "titlePart1": "Your Smartest",
+    "titlePart2": "Farm Companion",
+    "description": "KRISHI SAARTHI brings the power of large language models to every farmer and field supervisor.",
+    "getStartedButton": "Get Started!!",
+    "watchDemoButton": "Watch Demo",
+    "krishiAi": "Krishi AI",
+    "online": "● Online",
+    "userQuery": "My wheat leaves are turning yellow at the edges. What's wrong?",
+    "aiResponse": "This looks like Potassium deficiency. Apply MOP at 30 kg/acre.",
+    "askPlaceholder": "Ask about your crop...",
+    "stats": {
+      "aiPowered": "AI Powered Agri-Assistant",
+      "accuracy": "accuracy",
+      "cropYield": "Crop Yield",
+      "agriBooster": "Agri-Booster"
+    }
+  },
+  "features": {
+    "whatWeOffer": "What We Offer",
+    "title": "Everything a Field Supervisor Needs",
+    "description": "From AI-powered chat to detailed field analytics — KRISHI SAARTHI covers every dimension of modern precision agriculture.",
+    "aiCropAdvisor": {
+      "title": "AI Crop Advisor :",
+      "description": "Ask anything about your crops in plain language. Our LLM-powered assistant gives you expert-level guidance — from sowing to harvest."
+    },
+    "pestDetection": {
+      "title": "Pest & Disease Detection",
+      "description": "Describe symptoms or upload an image. KRISHI SAARTHI identifies threats and recommends precise, actionable treatments."
+    },
+    "soilInsights": {
+      "title": "Soil Health Insights",
+      "description": "Understand your soil composition, pH levels, and fertility status. Get tailored fertilizer and amendment recommendations."
+    },
+    "yieldAnalytics": {
+      "title": "Yield Analytics",
+      "description": "Track crop performance season over season. Visualize yield trends and get AI-driven suggestions to maximise output."
+    }
+  },
+  "about": {
+    "aboutUs": "About Us:",
+    "titlePart1": "Built for India's",
+    "titlePart2": "Fields & Farmers",
+    "description": "KRISHI SAARTHI is an AI-powered agricultural assistant designed to bring expert farming knowledge to every field in India. Born from a need to bridge the gap between cutting-edge AI and grassroots agriculture, we serve farmers, field supervisors, and agri-entrepreneurs across Uttarakhand and beyond.",
+    "servingUttarakhand": "Proudly serving Uttarakhand's farmers",
+    "rootedInAgriculture": {
+      "title": "Rooted in Agriculture",
+      "description": "Trained on deep agronomic knowledge spanning India's diverse crop varieties, soil types, and regional farming practices."
+    },
+    "farmerFirstDesign": {
+      "title": "Farmer-First Design",
+      "description": "Conversational, multilingual, and intuitive — built so any farmer can get expert guidance without any technical background."
+    },
+    "aiActsFast": {
+      "title": "AI That Acts Fast",
+      "description": "Powered by state-of-the-art LLMs, KRISHI SAARTHI delivers instant, contextual recommendations right when you need them most."
+    },
+    "trustedTransparent": {
+      "title": "Trusted & Transparent",
+      "description": "Every recommendation is grounded in verified agricultural science — farmer safety and accuracy always come first."
+    }
+  },
+  "howItWorks": {
+    "howItWorks": "How It Works",
+    "titlePart1": "From Field to Insight",
+    "titlePart2": "in Three Steps",
+    "step1Title": "Describe Your Field",
+    "step1Body": "Tell the AI about your crop type, location, and current conditions in plain language — no technical forms required.",
+    "step2Title": "Get Smart Recommendations",
+    "step2Body": "Receive precise, context-aware guidance powered by state-of-the-art LLM models trained on agronomic knowledge.",
+    "step3Title": "Act & Track",
+    "step3Body": "Implement suggestions in the field and log outcomes. Your data continuously improves future recommendations."
+  },
+  "cta": {
+    "titlePart1": "Ready to Transform",
+    "titlePart2": "Your Farm's Future?",
+    "description": "Join thousands of farmers and field supervisors using AI to make smarter, faster decisions — season after season.",
+    "getStartedButton": "Get Started — It's Free",
+    "requestDemoButton": "Request a Demo"
+  },
+  "footer": {
+    "copyright": "© 2026 Krishi Saarthi. Empowering Indian Agriculture with AI.",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "contact": "Contact"
+  },
+  "chatbot": {
+    "aiInitialGreeting": "Namaste! 🌿 I'm Krishi AI, your intelligent field assistant. Describe your crop issue, upload a field photo, or ask anything about soil, pests, or weather — I'm here to help.",
+    "aiFollowUpText": "Thank you for the details. Based on your description, I'm analysing the symptoms. Could you also share the current weather conditions in your area and the last irrigation date?",
+    "newConsultationStarted": "New consultation started. What crop issue can I help you with today?",
+    "newConsult": "+ New Consultation",
+    "recentHistory": "Recent History",
+    "settings": "Settings",
+    "online": "● Krishi AI — Online",
+    "poweredByLLM": "Powered by LLM · Agronomic AI",
+    "export": "Export Advice",
+    "placeholder": "Describe your crop issue or upload a photo...",
+    "attach": "Attach photo",
+    "voice": "Voice query",
+    "disclaimer": "Krishi AI may make mistakes. Verify critical advice with a certified agronomist.",
+    "you": "You",
+    "krishi": "Krishi AI",
+    "aiFieldReport": "AI Field Report",
+    "confidence": "Confidence",
+    "diagnosis": "Diagnosis",
+    "treatment": "Recommended Treatment",
+    "dosage": "Dosage / Acre",
+    "warning": "Safety Warning",
+    "followUp": "Follow-Up"
+  },
+  "history": {
+    "wheatFungal": "Wheat Fungal Issue",
+    "soilTest": "Soil Test — Zone B",
+    "pestControl": "Pest Control Timeline",
+    "cottonBlight": "Cotton Blight Query",
+    "irrigationSchedule": "Irrigation Schedule",
+    "daysAgo": "{{count}} days ago",
+    "weeksAgo": "{{count}} weeks ago",
+    "dayAgo": "{{count}} day ago",
+    "weekAgo": "{{count}} week ago"
+  },
+  "signIn": {
+    "title": "Sign In",
+    "description": "Welcome back! Access your smart farm companion.",
+    "googleButton": "Continue with Google",
+    "phoneButton": "Phone Number",
+    "emailButton": "Email Address",
+    "phonePlaceholder": "Enter mobile number",
+    "otpPlaceholder": "Enter 6-digit OTP",
+    "emailPlaceholder": "Enter email address",
+    "passwordPlaceholder": "Enter password",
+    "sendOtp": "Send OTP",
+    "verifyOtp": "Verify OTP & Sign In",
+    "login": "Sign In",
+    "back": "Back to Home",
+    "dontHaveAccount": "Don't have an account?",
+    "register": "Register here",
+    "phoneLabel": "Mobile Number",
+    "emailLabel": "Email Address",
+    "passwordLabel": "Password",
+    "otpLabel": "OTP Code",
+    "or": "or connect with",
+    "successMessage": "Signed in successfully!",
+    "otpSentMessage": "OTP sent to your mobile number!"
+  }
+}

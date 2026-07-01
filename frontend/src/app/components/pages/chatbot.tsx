@@ -20,7 +20,10 @@ import {
   Menu,
   MicOff,
   ImageIcon,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "../../context/ThemeContext";
 
 /* ─── Types ─────────────────────────────────────────────── */
 type Lang = "en" | "hi";
@@ -544,7 +547,7 @@ function MessageBubble({
           className="px-4 py-3 rounded-2xl"
           style={{
             background: isUser ? "var(--primary)" : "var(--card)",
-            color: isUser ? "#fff" : "var(--foreground)",
+            color: isUser ? "var(--primary-foreground)" : "var(--foreground)",
             border: isUser ? "none" : "1px solid var(--border)",
             borderBottomRightRadius: isUser ? "4px" : undefined,
             borderBottomLeftRadius: !isUser ? "4px" : undefined,
@@ -568,6 +571,7 @@ export default function ChatbotPage() {
   const [activeHistory, setActiveHistory] = useState("h1");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [micActive, setMicActive] = useState(false);
+  const { theme, toggleTheme } = useTheme();
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const labels = LABELS[lang];
@@ -870,18 +874,30 @@ export default function ChatbotPage() {
             </div>
           </div>
 
-          <button
-            className="flex items-center gap-2 px-3 py-2 rounded-xl transition-colors hover:bg-[var(--secondary)]"
-            style={{
-              border: "1px solid var(--border)",
-              color: "var(--primary)",
-              fontSize: "0.83rem",
-              fontWeight: 500,
-            }}
-          >
-            <Download size={14} />
-            <span className="hidden sm:inline">{labels.export}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center p-2 rounded-xl transition-colors hover:bg-[var(--secondary)] text-[var(--primary)]"
+              style={{
+                border: "1px solid var(--border)",
+              }}
+              aria-label="Toggle Theme"
+            >
+              {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+            <button
+              className="flex items-center gap-2 px-3 py-2 rounded-xl transition-colors hover:bg-[var(--secondary)]"
+              style={{
+                border: "1px solid var(--border)",
+                color: "var(--primary)",
+                fontSize: "0.83rem",
+                fontWeight: 500,
+              }}
+            >
+              <Download size={14} />
+              <span className="hidden sm:inline">{labels.export}</span>
+            </button>
+          </div>
         </header>
 
         {/* Message stream */}
