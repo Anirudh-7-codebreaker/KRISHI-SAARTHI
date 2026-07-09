@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { sendMessage as sendChatMessage } from "../../../../api/chat";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Leaf,
   Plus,
@@ -555,7 +558,15 @@ function MessageBubble({
             lineHeight: 1.65,
           }}
         >
-          {lang === "hi" && msg.textHindi ? msg.textHindi : msg.text}
+          {isUser ? (
+            lang === "hi" && msg.textHindi ? msg.textHindi : msg.text
+          ) : (
+            <div className="prose prose-sm max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {lang === "hi" && msg.textHindi ? msg.textHindi : msg.text}
+              </ReactMarkdown>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
@@ -580,10 +591,16 @@ export default function ChatbotPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
 
-  function sendMessage() {
+  async function sendMessage() {
     const trimmed = input.trim();
     if (!trimmed) return;
-    const now = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+
+    const now = new Date().toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    // User message
     const userMsg: ChatMessage = {
       id: `m${Date.now()}`,
       role: "user",
@@ -591,21 +608,33 @@ export default function ChatbotPage() {
       text: trimmed,
       timestamp: now,
     };
+
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setTyping(true);
-    setTimeout(() => {
-      setTyping(false);
+
+    try {
+      const response = await sendChatMessage({
+        message: trimmed,
+      });
+
       const aiMsg: ChatMessage = {
-        id: `m${Date.now() + 1}`,
+        id: `m${Date.now()}-ai`,
         role: "ai",
         type: "text",
-        text: "Thank you for the details. Based on your description, I'm analysing the symptoms. Could you also share the current weather conditions in your area and the last irrigation date?",
-        textHindi: "जानकारी के लिए धन्यवाद। आपके विवरण के आधार पर, मैं लक्षणों का विश्लेषण कर रहा हूँ। क्या आप अपने क्षेत्र की वर्तमान मौसम स्थिति और अंतिम सिंचाई की तारीख भी बता सकते हैं?",
-        timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+        text: response.reply,
+        timestamp: new Date().toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
+
       setMessages((prev) => [...prev, aiMsg]);
-    }, 1800);
+    } catch (error) {
+      console.error("Chat Error:", error);
+    } finally {
+      setTyping(false);
+    }
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -930,7 +959,7 @@ export default function ChatbotPage() {
                 border: "1.5px solid var(--border)",
                 transition: "border-color 0.2s",
               }}
-              onFocus={() => {}}
+              onFocus={() => { }}
             >
               {/* Attach */}
               <input
