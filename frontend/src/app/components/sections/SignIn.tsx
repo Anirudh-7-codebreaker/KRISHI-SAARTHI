@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "../../i18n";
 import { I18nextProvider } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
-import { loginUser } from "../../../../api/auth";
+import { loginUser } from "../../../api/auth";
 import {
   ChevronRight,
   Leaf,
@@ -309,6 +309,7 @@ function Login() {
                     onValueChange={setActiveTab}
                     className="w-full"
                   >
+                    {/*
                     <TabsList className="grid grid-cols-2 w-full mb-4 bg-muted/50 p-1 rounded-xl">
                       <TabsTrigger
                         value="phone"
@@ -325,8 +326,10 @@ function Login() {
                         {t("signIn.emailButton")}
                       </TabsTrigger>
                     </TabsList>
+                    */}
 
                     {/* Phone Authentication Form */}
+                    {/*
                     <TabsContent value="phone">
                       <form
                         onSubmit={otpSent ? handleVerifyOtp : handleSendOtp}
@@ -357,7 +360,6 @@ function Login() {
                           </div>
                         </div>
 
-                        {/* OTP Verification Input */}
                         <AnimatePresence>
                           {otpSent && (
                             <motion.div
@@ -420,6 +422,7 @@ function Login() {
                         </Button>
                       </form>
                     </TabsContent>
+                    */}
 
                     {/* Email Authentication Form */}
                     <TabsContent value="email">
@@ -509,6 +512,7 @@ function Login() {
                   </Tabs>
 
                   {/* Connect Divider */}
+                  {/*
                   <div className="relative flex py-2 items-center">
                     <div className="flex-grow border-t border-border/80"></div>
                     <span className="flex-shrink mx-4 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
@@ -516,8 +520,10 @@ function Login() {
                     </span>
                     <div className="flex-grow border-t border-border/80"></div>
                   </div>
+                  */}
 
                   {/* Google Login Inline Button */}
+                  {/*
                   <Button
                     type="button"
                     variant="outline"
@@ -549,6 +555,7 @@ function Login() {
                     )}
                     {t("signIn.googleButton")}
                   </Button>
+                  */}
                 </>
               )}
             </CardContent>

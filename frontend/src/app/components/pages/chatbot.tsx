@@ -1,8 +1,34 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { sendMessage as sendChatMessage } from "../../../../api/chat";
+import {
+  sendMessage as sendChatMessage,
+  fetchConversations,
+  fetchConversationMessages,
+  deleteConversation,
+  ConversationSummary,
+} from "../../../api/chat";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import {
   Leaf,
   Plus,
@@ -26,9 +52,12 @@ import {
   Sun,
   Moon,
   LogOut,
+  Home,
+  Trash2,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 /* ─── Types ─────────────────────────────────────────────── */
 type Lang = "en" | "hi";
@@ -65,21 +94,20 @@ interface TreatmentStep {
   detailHindi?: string;
 }
 
-interface HistoryItem {
-  id: string;
-  label: string;
-  sublabel: string;
-  icon: React.ElementType;
+function formatSublabel(dateStr: string) {
+  if (!dateStr) return "";
+  const isoStr = dateStr.endsWith("Z") || dateStr.includes("+") ? dateStr : dateStr + "Z";
+  const date = new Date(isoStr);
+  if (isNaN(date.getTime())) return "";
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 3600 * 24));
+  if (diffDays <= 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return date.toLocaleDateString("en-IN", { month: "short", day: "numeric" });
 }
 
-/* ─── Static seed data ───────────────────────────────────── */
-const HISTORY: HistoryItem[] = [
-  { id: "h1", label: "Wheat Fungal Issue", sublabel: "2 days ago", icon: Sprout },
-  { id: "h2", label: "Soil Test — Zone B", sublabel: "5 days ago", icon: FlaskConical },
-  { id: "h3", label: "Pest Control Timeline", sublabel: "1 week ago", icon: AlertTriangle },
-  { id: "h4", label: "Cotton Blight Query", sublabel: "2 weeks ago", icon: Leaf },
-  { id: "h5", label: "Irrigation Schedule", sublabel: "3 weeks ago", icon: MessageSquare },
-];
+
 
 const SEED_MESSAGES: ChatMessage[] = [
   {
@@ -181,6 +209,7 @@ const LABELS: Record<Lang, Record<string, string>> = {
     attach: "Attach photo",
     voice: "Voice query",
     logout: "Log Out",
+    home: "Home",
   },
   hi: {
     newConsult: "+ नई परामर्श",
@@ -201,19 +230,51 @@ const LABELS: Record<Lang, Record<string, string>> = {
     attach: "फ़ोटो संलग्न करें",
     voice: "आवाज़ क्वेरी",
     logout: "लॉग आउट",
+    home: "मुख्य पृष्ठ",
   },
 };
 
 const SUGGESTIONS: Record<Lang, string[]> = {
   en: [
-    "What is causing yellow leaves on my wheat?",
+    "Who is you creator? 😎",
     "How can I control fungal growth in my field?",
     "Give me a quick irrigation plan for today.",
   ],
   hi: [
-    "मेरी गेहूं की पत्तियों पर पीला रंग क्यों आ रहा है?",
+    "तुम्हारे निर्माता कौन है? 😎",
     "मेरे खेत में कवक वृद्धि को कैसे नियंत्रित करूं?",
     "आज के लिए एक त्वरित सिंचाई योजना दीजिए।",
+  ],
+};
+
+const EMPTY_STATE_PROMPTS: Record<Lang, Array<{ label: string; prompt: string }>> = {
+  en: [
+    {
+      label: "Crop disease",
+      prompt: "My crop has a disease. Diagnose it and suggest treatment.",
+    },
+    {
+      label: "Soil advice",
+      prompt: "Give me soil health and fertilizer advice for my field.",
+    },
+    {
+      label: "Weather plan",
+      prompt: "Create a weather-based irrigation and farm plan for today.",
+    },
+  ],
+  hi: [
+    {
+      label: "फसल रोग",
+      prompt: "मेरी फसल में रोग है। इसका निदान करें और उपचार बताएं।",
+    },
+    {
+      label: "मिट्टी सलाह",
+      prompt: "मेरे खेत के लिए मिट्टी स्वास्थ्य और उर्वरक सलाह दें।",
+    },
+    {
+      label: "मौसम योजना",
+      prompt: "आज के लिए मौसम-आधारित सिंचाई और कृषि योजना बनाएं।",
+    },
   ],
 };
 
@@ -294,12 +355,11 @@ function ImageBubble({ file }: { file: string }) {
 function RecommendationCard({ rec, lang, labels }: { rec: Recommendation; lang: Lang; labels: Record<string, string> }) {
   return (
     <div
-      className="rounded-2xl overflow-hidden"
+      className="rounded-2xl overflow-hidden shadow-md transition-colors"
       style={{
         background: "var(--card)",
         border: "1px solid var(--border)",
         maxWidth: "520px",
-        boxShadow: "0 4px 20px rgba(45,106,47,0.08)",
       }}
     >
       {/* Header */}
@@ -308,14 +368,15 @@ function RecommendationCard({ rec, lang, labels }: { rec: Recommendation; lang: 
         style={{ background: "var(--primary)", borderBottom: "none" }}
       >
         <div className="flex items-center gap-2">
-          <FlaskConical size={16} color="#a5d67a" />
+          <FlaskConical size={16} style={{ color: "var(--primary-foreground)" }} />
           <span
             style={{
               fontFamily: "'DM Mono', monospace",
               fontSize: "0.72rem",
               letterSpacing: "0.08em",
-              color: "#a5d67a",
+              color: "var(--primary-foreground)",
               textTransform: "uppercase",
+              fontWeight: 700,
             }}
           >
             AI Field Report
@@ -323,10 +384,10 @@ function RecommendationCard({ rec, lang, labels }: { rec: Recommendation; lang: 
         </div>
         <div
           className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full"
-          style={{ background: "rgba(165,214,122,0.2)", border: "1px solid rgba(165,214,122,0.35)" }}
+          style={{ background: "rgba(0,0,0,0.15)", border: "1px solid rgba(255,255,255,0.25)" }}
         >
-          <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#a5d67a" }} />
-          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.7rem", color: "#a5d67a" }}>
+          <div className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--primary-foreground)" }} />
+          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.7rem", color: "var(--primary-foreground)", fontWeight: 600 }}>
             {rec.confidence}% {labels.confidence}
           </span>
         </div>
@@ -335,7 +396,7 @@ function RecommendationCard({ rec, lang, labels }: { rec: Recommendation; lang: 
       {/* Diagnosis */}
       <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="flex items-center gap-2 mb-2">
-          <CheckCircle2 size={14} color="var(--accent)" />
+          <CheckCircle2 size={14} style={{ color: "var(--accent)" }} />
           <span
             style={{
               fontFamily: "'DM Mono', monospace",
@@ -343,6 +404,7 @@ function RecommendationCard({ rec, lang, labels }: { rec: Recommendation; lang: 
               letterSpacing: "0.08em",
               color: "var(--accent)",
               textTransform: "uppercase",
+              fontWeight: 700,
             }}
           >
             {labels.diagnosis}
@@ -356,7 +418,7 @@ function RecommendationCard({ rec, lang, labels }: { rec: Recommendation; lang: 
       {/* Treatment steps */}
       <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="flex items-center gap-2 mb-3">
-          <Sprout size={14} color="var(--accent)" />
+          <Sprout size={14} style={{ color: "var(--accent)" }} />
           <span
             style={{
               fontFamily: "'DM Mono', monospace",
@@ -364,6 +426,7 @@ function RecommendationCard({ rec, lang, labels }: { rec: Recommendation; lang: 
               letterSpacing: "0.08em",
               color: "var(--accent)",
               textTransform: "uppercase",
+              fontWeight: 700,
             }}
           >
             {labels.treatment}
@@ -381,7 +444,7 @@ function RecommendationCard({ rec, lang, labels }: { rec: Recommendation; lang: 
                     fontFamily: "'DM Mono', monospace",
                     fontSize: "0.65rem",
                     fontWeight: 700,
-                    color: "var(--primary)",
+                    color: "var(--accent)",
                   }}
                 >
                   {t.step}
@@ -403,14 +466,15 @@ function RecommendationCard({ rec, lang, labels }: { rec: Recommendation; lang: 
       {/* Dosage box */}
       <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="flex items-center gap-2 mb-2">
-          <FlaskConical size={14} color="var(--primary)" />
+          <FlaskConical size={14} style={{ color: "var(--accent)" }} />
           <span
             style={{
               fontFamily: "'DM Mono', monospace",
               fontSize: "0.7rem",
               letterSpacing: "0.08em",
-              color: "var(--primary)",
+              color: "var(--accent)",
               textTransform: "uppercase",
+              fontWeight: 700,
             }}
           >
             {labels.dosage}
@@ -420,10 +484,10 @@ function RecommendationCard({ rec, lang, labels }: { rec: Recommendation; lang: 
           className="px-4 py-3 rounded-xl"
           style={{
             background: "var(--secondary)",
-            border: "1.5px solid rgba(45,106,47,0.25)",
+            border: "1.5px solid var(--border)",
             fontFamily: "'DM Mono', monospace",
             fontSize: "0.82rem",
-            color: "var(--primary)",
+            color: "var(--foreground)",
             lineHeight: 1.6,
           }}
         >
@@ -435,23 +499,26 @@ function RecommendationCard({ rec, lang, labels }: { rec: Recommendation; lang: 
       <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
         <div
           className="flex gap-3 px-4 py-3 rounded-xl"
-          style={{ background: "rgba(212,24,61,0.06)", border: "1px solid rgba(212,24,61,0.2)" }}
+          style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)" }}
         >
-          <AlertTriangle size={16} color="#d4183d" className="flex-shrink-0 mt-0.5" />
+          <AlertTriangle size={16} className="flex-shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
           <div>
             <p
+              className="text-red-600 dark:text-red-400"
               style={{
                 fontFamily: "'DM Mono', monospace",
                 fontSize: "0.68rem",
                 letterSpacing: "0.08em",
-                color: "#d4183d",
+                fontWeight: 700,
                 textTransform: "uppercase",
                 marginBottom: "0.25rem",
               }}
             >
               {labels.warning}
             </p>
-            <p style={{ fontSize: "0.82rem", color: "#9b1530", lineHeight: 1.55 }}>{lang === "hi" && rec.warningHindi ? rec.warningHindi : rec.warning}</p>
+            <p className="text-red-700 dark:text-red-300" style={{ fontSize: "0.82rem", lineHeight: 1.55 }}>
+              {lang === "hi" && rec.warningHindi ? rec.warningHindi : rec.warning}
+            </p>
           </div>
         </div>
       </div>
@@ -470,7 +537,9 @@ function RecommendationCard({ rec, lang, labels }: { rec: Recommendation; lang: 
         >
           {labels.followUp}
         </p>
-        <p style={{ fontSize: "0.85rem", color: "var(--foreground)", lineHeight: 1.6 }}>{lang === "hi" && rec.followUpHindi ? rec.followUpHindi : rec.followUp}</p>
+        <p style={{ fontSize: "0.85rem", color: "var(--foreground)", lineHeight: 1.6 }}>
+          {lang === "hi" && rec.followUpHindi ? rec.followUpHindi : rec.followUp}
+        </p>
       </div>
     </div>
   );
@@ -515,7 +584,7 @@ function MessageBubble({
           className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center mt-1"
           style={{ background: "var(--accent)" }}
         >
-          <Leaf size={14} color="#fff" />
+          <Leaf size={14} color="var(--accent-foreground)" />
         </div>
         <div className="flex flex-col gap-1">
           <span
@@ -544,13 +613,14 @@ function MessageBubble({
         className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center"
         style={{
           background: isUser ? "var(--primary)" : "var(--accent)",
+          color: isUser ? "var(--primary-foreground)" : "var(--accent-foreground)",
           flexShrink: 0,
         }}
       >
         {isUser ? (
-          <span style={{ color: "#fff", fontSize: "0.75rem", fontWeight: 700 }}>R</span>
+          <span style={{ fontSize: "0.75rem", fontWeight: 700 }}>R</span>
         ) : (
-          <Leaf size={14} color="#fff" />
+          <Leaf size={14} />
         )}
       </div>
       <div className={`flex flex-col ${isUser ? "items-end" : "items-start"} gap-1 max-w-[72%]`}>
@@ -564,10 +634,10 @@ function MessageBubble({
           {isUser ? labels.you : labels.krishi} · {msg.timestamp}
         </span>
         <div
-          className="px-4 py-3 rounded-2xl"
+          className="px-4 py-3 rounded-2xl shadow-sm"
           style={{
-            background: isUser ? "var(--primary)" : "var(--card)",
-            color: isUser ? "var(--primary-foreground)" : "var(--foreground)",
+            background: isUser ? "var(--primary)" : "var(--chat-bubble-ai-bg)",
+            color: isUser ? "var(--primary-foreground)" : "var(--chat-bubble-ai-text)",
             border: isUser ? "none" : "1px solid var(--border)",
             borderBottomRightRadius: isUser ? "4px" : undefined,
             borderBottomLeftRadius: !isUser ? "4px" : undefined,
@@ -578,7 +648,7 @@ function MessageBubble({
           {isUser ? (
             lang === "hi" && msg.textHindi ? msg.textHindi : msg.text
           ) : (
-            <div className="prose prose-sm max-w-none">
+            <div className="prose prose-sm dark:prose-invert max-w-none text-foreground dark:text-emerald-50">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {lang === "hi" && msg.textHindi ? msg.textHindi : msg.text}
               </ReactMarkdown>
@@ -592,27 +662,114 @@ function MessageBubble({
 
 /* ─── Main Component ─────────────────────────────────────── */
 export default function ChatbotPage() {
+  const navigate = useNavigate();
   const [lang, setLang] = useState<Lang>("en");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
-  const [activeHistory, setActiveHistory] = useState("h1");
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
+  const [loadingConversations, setLoadingConversations] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [micActive, setMicActive] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ConversationSummary | null>(null);
   const { theme, toggleTheme } = useTheme();
-  const { signOut } = useAuth();
+  const { isAuthenticated, signOut } = useAuth();
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const labels = LABELS[lang];
   const suggestions = SUGGESTIONS[lang];
+  const emptyStatePrompts = EMPTY_STATE_PROMPTS[lang];
+  const hasInput = input.trim().length > 0;
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 144)}px`;
+  }, [input]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
 
-  async function sendMessage() {
-    const trimmed = input.trim();
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadConversations();
+    } else {
+      setConversations([]);
+      setMessages([]);
+      setActiveConversationId(null);
+    }
+  }, [isAuthenticated]);
+
+  async function loadConversations(selectId?: number) {
+    setLoadingConversations(true);
+    try {
+      const list = await fetchConversations();
+      setConversations(list);
+      if (selectId) {
+        selectConversation(selectId);
+      }
+    } catch (err) {
+      console.error("Failed to load conversations:", err);
+    } finally {
+      setLoadingConversations(false);
+    }
+  }
+
+  async function selectConversation(id: number) {
+    setActiveConversationId(id);
+    setSidebarOpen(false);
+    setLoadingMessages(true);
+    try {
+      const detail = await fetchConversationMessages(id);
+      setMessages(detail.messages || []);
+    } catch (err) {
+      console.error("Failed to load conversation messages:", err);
+    } finally {
+      setLoadingMessages(false);
+    }
+  }
+
+  function startNewConsult() {
+    setActiveConversationId(null);
+    setMessages([]);
+    setInput("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+    setSidebarOpen(false);
+  }
+
+  function handleDeleteConversation(id: number) {
+    const target = conversations.find((conversation) => conversation.id === id);
+    if (!target) return;
+
+    setDeleteTarget(target);
+  }
+
+  async function confirmDeleteConversation() {
+    if (!deleteTarget) return;
+
+    try {
+      await deleteConversation(deleteTarget.id);
+      setConversations((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+      if (activeConversationId === deleteTarget.id) {
+        startNewConsult();
+      }
+    } catch (err) {
+      console.error("Failed to delete conversation:", err);
+    } finally {
+      setDeleteTarget(null);
+    }
+  }
+
+  async function sendMessage(messageOverride?: string) {
+    const trimmed = (messageOverride ?? input).trim();
     if (!trimmed) return;
 
     const now = new Date().toLocaleTimeString("en-IN", {
@@ -620,7 +777,6 @@ export default function ChatbotPage() {
       minute: "2-digit",
     });
 
-    // User message
     const userMsg: ChatMessage = {
       id: `m${Date.now()}`,
       role: "user",
@@ -631,27 +787,51 @@ export default function ChatbotPage() {
 
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
     setTyping(true);
 
     try {
-      const response = (await sendChatMessage({
+      const response = await sendChatMessage({
         message: trimmed,
-      })) as { reply?: string };
+        conversation_id: activeConversationId,
+      });
 
-      const aiMsg: ChatMessage = {
-        id: `m${Date.now()}-ai`,
+      if (response.conversation_id) {
+        setActiveConversationId(response.conversation_id);
+      }
+
+      loadConversations();
+
+      if (response.messages && response.messages.length > 0) {
+        setMessages(response.messages);
+      } else if (response.reply) {
+        const aiMsg: ChatMessage = {
+          id: `m${Date.now()}-ai`,
+          role: "ai",
+          type: "text",
+          text: response.reply,
+          timestamp: new Date().toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        };
+        setMessages((prev) => [...prev, aiMsg]);
+      }
+    } catch (error) {
+      console.error("Chat Error:", error);
+      const errorMsg: ChatMessage = {
+        id: `err-${Date.now()}`,
         role: "ai",
         type: "text",
-        text: response.reply ?? "I’m here to help with your crop question.",
+        text: "I couldn't process your request right now. Please check your network connection or try logging in again.",
         timestamp: new Date().toLocaleTimeString("en-IN", {
           hour: "2-digit",
           minute: "2-digit",
         }),
       };
-
-      setMessages((prev) => [...prev, aiMsg]);
-    } catch (error) {
-      console.error("Chat Error:", error);
+      setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setTyping(false);
     }
@@ -664,23 +844,74 @@ export default function ChatbotPage() {
     }
   }
 
-  function startNewConsult() {
-    setMessages([]);
-    setInput("");
-    setSidebarOpen(false);
-  }
-
   function handleSuggestionClick(text: string) {
     setInput(text);
     textareaRef.current?.focus();
   }
 
+  function handleEmptyStatePrompt(prompt: string) {
+    setInput(prompt);
+    textareaRef.current?.focus();
+  }
+
+  function handleGoHome() {
+    setSidebarOpen(false);
+    navigate("/");
+  }
+
+  function handleExportAdvice() {
+    const sections = messages.map((message, index) => {
+      const speaker = message.role === "ai" ? labels.krishi : labels.you;
+      const body =
+        message.type === "recommendation" && message.recommendation
+          ? [
+              `${labels.diagnosis}: ${lang === "hi" && message.recommendation.diagnosisHindi ? message.recommendation.diagnosisHindi : message.recommendation.diagnosis}`,
+              `${labels.treatment}: ${message.recommendation.treatment
+                .map((step) => `${step.step}. ${lang === "hi" && step.actionHindi ? step.actionHindi : step.action}`)
+                .join("; ")}`,
+            ].join("\n")
+          : lang === "hi" && message.textHindi
+            ? message.textHindi
+            : message.text || "";
+
+      return [
+        `${index + 1}. ${speaker} | ${message.timestamp}`,
+        body,
+      ].join("\n");
+    });
+
+    const content = [
+      `Krishi Saarthi ${labels.export}`,
+      `Generated: ${new Date().toLocaleString("en-IN")}`,
+      "",
+      ...(sections.length > 0 ? sections : ["No consultation messages available."]),
+    ].join("\n");
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `krishi-saarthi-advice-${new Date().toISOString().slice(0, 10)}.txt`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  function handleToggleLanguage(nextLang: Lang) {
+    setLang(nextLang);
+  }
+
+  function handleLogout() {
+    setSidebarOpen(false);
+    signOut();
+  }
+
+
   return (
     <div
-      className="flex h-screen overflow-hidden"
+      className="flex h-screen overflow-hidden transition-colors"
       style={{
         fontFamily: "'Inter', sans-serif",
-        background: "linear-gradient(135deg, #f6fdf0 0%, #ebf8e2 45%, #f8fdf4 100%)",
+        background: "var(--chat-gradient)",
       }}
     >
       {/* ── Sidebar overlay on mobile ── */}
@@ -718,21 +949,26 @@ export default function ChatbotPage() {
           style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
         >
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: "var(--accent)" }}
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2.5 cursor-pointer transition-opacity hover:opacity-80"
           >
-            <Leaf size={15} color="#fff" />
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: "var(--accent)" }}
+            >
+              <Leaf size={15} color="#fff" />
+            </div>
+            <span
+              style={{
+                fontFamily: "'Playfair Display', serif",
+                fontWeight: 600,
+                fontSize: "1rem",
+                color: "#fff",
+              }}
+            >
+              Krishi Saarthi
+            </span>
           </div>
-          <span
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              fontWeight: 600,
-              fontSize: "1rem",
-              color: "#fff",
-            }}
-          >
-            Krishi Saarthi
-          </span>
           <button
             className="ml-auto md:hidden"
             onClick={() => setSidebarOpen(false)}
@@ -746,15 +982,13 @@ export default function ChatbotPage() {
         <div className="px-4 pt-5 pb-3">
           <button
             onClick={startNewConsult}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl transition-opacity hover:opacity-90 active:scale-[0.98]"
+            className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-opacity hover:opacity-90 active:scale-[0.98]"
             style={{
               background: "var(--accent)",
               color: "#fff",
-              fontWeight: 600,
-              fontSize: "0.9rem",
             }}
           >
-            <Plus size={50} />
+            <Plus size={16} />
             {labels.newConsult}
           </button>
         </div>
@@ -765,7 +999,7 @@ export default function ChatbotPage() {
             className="mb-3"
             style={{
               fontFamily: "'DM Mono', monospace",
-              fontSize: "1.65rem",
+              fontSize: "0.75rem",
               letterSpacing: "0.1em",
               color: "rgba(255,255,255,0.35)",
               textTransform: "uppercase",
@@ -774,63 +1008,85 @@ export default function ChatbotPage() {
             {labels.recentHistory}
           </p>
           <div className="flex flex-col gap-1">
-            {HISTORY.map((h) => (
-              <button
-                key={h.id}
-                onClick={() => { setActiveHistory(h.id); setSidebarOpen(false); }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors"
+            {conversations.length === 0 ? (
+              <div
+                className="px-3 py-4 text-center"
                 style={{
-                  background:
-                    activeHistory === h.id
-                      ? "rgba(122,182,72,0.15)"
-                      : "transparent",
-                  border:
-                    activeHistory === h.id
-                      ? "1px solid rgba(122,182,72,0.25)"
-                      : "1px solid transparent",
+                  fontSize: "0.75rem",
+                  color: "rgba(255,255,255,0.3)",
+                  fontFamily: "'DM Mono', monospace",
                 }}
               >
+                No saved consultations
+              </div>
+            ) : (
+              conversations.map((c) => (
                 <div
-                  className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                  key={c.id}
+                  onClick={() => selectConversation(c.id)}
+                  className="group relative w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors hover:bg-white/5"
                   style={{
                     background:
-                      activeHistory === h.id
-                        ? "rgba(122,182,72,0.2)"
-                        : "rgba(255,255,255,0.06)",
+                      activeConversationId === c.id
+                        ? "rgba(122,182,72,0.15)"
+                        : "transparent",
+                    border:
+                      activeConversationId === c.id
+                        ? "1px solid rgba(122,182,72,0.25)"
+                        : "1px solid transparent",
                   }}
                 >
-                  <h.icon
-                    size={13}
-                    color={activeHistory === h.id ? "var(--accent)" : "rgba(255,255,255,0.4)"}
-                  />
-                </div>
-                <div className="min-w-0">
-                  <p
-                    className="truncate"
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{
-                      fontSize: "0.85rem",
-                      fontWeight: 500,
-                      color: activeHistory === h.id ? "#fff" : "rgba(255,255,255,0.65)",
+                      background:
+                        activeConversationId === c.id
+                          ? "rgba(122,182,72,0.2)"
+                          : "rgba(255,255,255,0.06)",
                     }}
                   >
-                    {h.label}
-                  </p>
-                  <p
-                    style={{
-                      fontSize: "0.72rem",
-                      color: "rgba(255,255,255,0.3)",
-                      fontFamily: "'DM Mono', monospace",
+                    <MessageSquare
+                      size={13}
+                      color={activeConversationId === c.id ? "var(--accent)" : "rgba(255,255,255,0.4)"}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1 pr-12">
+                    <p
+                      className="truncate"
+                      style={{
+                        fontSize: "0.85rem",
+                        fontWeight: 500,
+                        color: activeConversationId === c.id ? "#fff" : "rgba(255,255,255,0.65)",
+                      }}
+                    >
+                      {c.title}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: "0.72rem",
+                        color: "rgba(255,255,255,0.3)",
+                        fontFamily: "'DM Mono', monospace",
+                      }}
+                    >
+                      <Clock size={9} className="inline mr-1" />
+                      {formatSublabel(c.updated_at)}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteConversation(c.id);
                     }}
+                    className="absolute right-2 flex h-10 w-10 items-center justify-center rounded-lg text-white/40 transition-colors hover:bg-white/10 hover:text-white"
+                    title="Delete consultation"
+                    aria-label="Delete consultation"
                   >
-                    <Clock size={9} className="inline mr-1" />
-                    {h.sublabel}
-                  </p>
+                    <Trash2 size={15} />
+                  </button>
                 </div>
-                {activeHistory === h.id && (
-                  <ChevronRight size={14} color="var(--accent)" className="ml-auto flex-shrink-0" />
-                )}
-              </button>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -839,41 +1095,66 @@ export default function ChatbotPage() {
           className="px-4 py-4 flex flex-col gap-2"
           style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
         >
-          <button
-            onClick={() => setLang(lang === "en" ? "hi" : "en")}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:bg-white/5"
-            style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.87rem" }}
-          >
-            <Languages size={16} color="var(--accent)" />
-            <span>{labels.language}</span>
-            <div
-              className="ml-auto px-2 py-0.5 rounded-full"
-              style={{
-                background: "rgba(122,182,72,0.15)",
-                border: "1px solid rgba(122,182,72,0.25)",
-                fontFamily: "'DM Mono', monospace",
-                fontSize: "0.65rem",
-                color: "var(--accent)",
-              }}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:bg-white/5"
+                style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.87rem" }}
+              >
+                <Settings size={16} color="rgba(255,255,255,0.35)" />
+                <span>{labels.settings}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side="top"
+              align="start"
+              sideOffset={10}
+              collisionPadding={12}
+              className="w-[min(18rem,calc(100vw-2rem))] max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-white/10 bg-[#23261d] p-2 shadow-2xl"
             >
-              {lang === "en" ? "EN" : "HI"}
-            </div>
-          </button>
-          <button
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:bg-white/5"
-            style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.87rem" }}
-          >
-            <Settings size={27} color="rgba(255,255,255,0.35)" />
-            <span>{labels.settings}</span>
-          </button>
-          <button
-            onClick={signOut}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:bg-white/5"
-            style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.87rem" }}
-          >
-            <LogOut size={16} color="rgba(255,255,255,0.35)" />
-            <span>{labels.logout}</span>
-          </button>
+              <DropdownMenuItem
+                onSelect={handleGoHome}
+                className="min-h-11 gap-3 rounded-xl px-3 py-3 text-sm text-white/80 focus:bg-white/5 focus:text-white"
+              >
+                <Home size={16} color="var(--accent)" />
+                <span>{lang === "en" ? "Home" : "मुख्य पृष्ठ"}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={handleExportAdvice}
+                className="min-h-11 gap-3 rounded-xl px-3 py-3 text-sm text-white/80 focus:bg-white/5 focus:text-white"
+              >
+                <Download size={16} color="var(--accent)" />
+                <span>{labels.export}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={handleLogout}
+                className="min-h-11 gap-3 rounded-xl px-3 py-3 text-sm text-white/80 focus:bg-white/5 focus:text-white"
+              >
+                <LogOut size={16} color="var(--accent)" />
+                <span>{labels.logout}</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="my-2 bg-white/10" />
+              <DropdownMenuLabel className="px-3 pb-2 pt-1 text-xs uppercase tracking-[0.14em] text-white/35">
+                {lang === "en" ? "Language" : "भाषा"}
+              </DropdownMenuLabel>
+              <DropdownMenuRadioGroup value={lang} onValueChange={(value) => handleToggleLanguage(value as Lang)}>
+                <DropdownMenuRadioItem
+                  value="en"
+                  className="min-h-11 rounded-xl px-3 py-3 text-sm text-white/80 focus:bg-white/5 focus:text-white"
+                >
+                  <Languages size={16} color="var(--accent)" />
+                  <span>English</span>
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem
+                  value="hi"
+                  className="min-h-11 rounded-xl px-3 py-3 text-sm text-white/80 focus:bg-white/5 focus:text-white"
+                >
+                  <Languages size={16} color="var(--accent)" />
+                  <span>हिन्दी</span>
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </aside>
 
@@ -882,7 +1163,7 @@ export default function ChatbotPage() {
 
         {/* Chat header */}
         <header
-          className="flex items-center justify-between px-5 py-3.5 flex-shrink-0"
+          className="flex items-center gap-4 px-5 py-3.5 flex-shrink-0"
           style={{
             background: "var(--card)",
             borderBottom: "1px solid var(--border)",
@@ -890,7 +1171,7 @@ export default function ChatbotPage() {
           }}
         >
           <div className="flex items-center gap-3">
-            {/* Mobile sidebar toggle */}
+            {/* Mobile toggle */}
             <button
               className="md:hidden"
               onClick={() => setSidebarOpen(true)}
@@ -901,9 +1182,9 @@ export default function ChatbotPage() {
 
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center"
-              style={{ background: "var(--accent)" }}
+              style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
             >
-              <Leaf size={16} color="#fff" />
+              <Leaf size={16} />
             </div>
             <div>
               <p
@@ -929,7 +1210,7 @@ export default function ChatbotPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             <button
               onClick={toggleTheme}
               className="flex items-center justify-center p-2 rounded-xl transition-colors hover:bg-[var(--secondary)] text-[var(--primary)]"
@@ -939,31 +1220,6 @@ export default function ChatbotPage() {
               aria-label="Toggle Theme"
             >
               {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
-            </button>
-            <button
-              className="flex items-center gap-2 px-3 py-2 rounded-xl transition-colors hover:bg-[var(--secondary)]"
-              style={{
-                border: "1px solid var(--border)",
-                color: "var(--primary)",
-                fontSize: "0.83rem",
-                fontWeight: 500,
-              }}
-            >
-              <Download size={14} />
-              <span className="hidden sm:inline">{labels.export}</span>
-            </button>
-            <button
-              onClick={signOut}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl transition-colors hover:bg-[var(--secondary)]"
-              style={{
-                border: "1px solid var(--border)",
-                color: "var(--primary)",
-                fontSize: "0.83rem",
-                fontWeight: 500,
-              }}
-            >
-              <LogOut size={14} />
-              <span className="hidden sm:inline">{labels.logout}</span>
             </button>
           </div>
         </header>
@@ -977,14 +1233,17 @@ export default function ChatbotPage() {
             {messages.length === 0 && !typing ? (
               <div className="flex h-full min-h-[420px] items-center justify-center">
                 <div
-                  className="w-full max-w-xl rounded-[28px] border border-[rgba(45,106,47,0.12)] p-8 text-center shadow-[0_20px_60px_rgba(45,106,47,0.08)] backdrop-blur-sm"
-                  style={{ background: "rgba(255,255,255,0.78)" }}
+                  className="w-full max-w-xl rounded-[28px] border p-8 text-center shadow-lg transition-colors"
+                  style={{
+                    background: "var(--chat-empty-card-bg)",
+                    borderColor: "var(--border)",
+                  }}
                 >
                   <div
-                    className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full"
-                    style={{ background: "linear-gradient(135deg, #7fbf4d 0%, #4f8f34 100%)" }}
+                    className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full shadow-md"
+                    style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
                   >
-                    <Leaf size={24} color="#fff" />
+                    <Leaf size={24} />
                   </div>
                   <h3
                     style={{
@@ -1008,22 +1267,19 @@ export default function ChatbotPage() {
                       : "फसल, मिट्टी, कीट, सिंचाई के बारे में पूछें या त्वरित मार्गदर्शन के लिए फोटो अपलोड करें।"}
                   </p>
                   <div className="mt-6 flex flex-wrap justify-center gap-2">
-                    {[
-                      lang === "en" ? "Crop disease" : "फसल रोग",
-                      lang === "en" ? "Soil advice" : "मिट्टी सलाह",
-                      lang === "en" ? "Weather plan" : "मौसम योजना",
-                    ].map((chip) => (
-                      <span
-                        key={chip}
-                        className="rounded-full px-3 py-1.5 text-sm"
+                    {emptyStatePrompts.map((chip) => (
+                      <button
+                        key={chip.label}
+                        onClick={() => handleEmptyStatePrompt(chip.prompt)}
+                        className="rounded-full px-3 py-1.5 text-sm transition-colors"
                         style={{
-                          background: "rgba(122,182,72,0.12)",
-                          color: "var(--primary)",
-                          border: "1px solid rgba(122,182,72,0.2)",
+                          background: "var(--secondary)",
+                          color: "var(--accent)",
+                          border: "1px solid var(--border)",
                         }}
                       >
-                        {chip}
-                      </span>
+                        {chip.label}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -1042,24 +1298,23 @@ export default function ChatbotPage() {
 
         {/* Input bar */}
         <div
-          className="flex-shrink-0 px-5 md:px-8 py-4"
+          className="flex-shrink-0 px-5 md:px-8 py-4 transition-colors"
           style={{
-            background: "rgba(255,255,255,0.72)",
-            borderTop: "1px solid rgba(45,106,47,0.12)",
-            backdropFilter: "blur(10px)",
+            background: "var(--chat-input-bg)",
+            borderTop: "1px solid var(--border)",
           }}
         >
           <div className="max-w-3xl mx-auto">
             <div className="mb-3 flex flex-wrap gap-2">
-              {suggestions.map((suggestion) => (
+              {messages.length === 0 && !typing && suggestions.map((suggestion) => (
                 <button
                   key={suggestion}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  className="rounded-full border px-3 py-2 text-left text-sm transition-all hover:-translate-y-0.5 hover:bg-[rgba(122,182,72,0.12)]"
+                  onClick={() => sendMessage(suggestion)}
+                  className="rounded-full border px-3 py-2 text-left text-sm transition-all hover:-translate-y-0.5"
                   style={{
-                    background: "rgba(255,255,255,0.8)",
-                    borderColor: "rgba(45,106,47,0.14)",
-                    color: "var(--primary)",
+                    background: "var(--chat-suggestion-bg)",
+                    borderColor: "var(--chat-suggestion-border)",
+                    color: "var(--foreground)",
                   }}
                 >
                   {suggestion}
@@ -1068,13 +1323,11 @@ export default function ChatbotPage() {
             </div>
 
             <div
-              className="flex items-end gap-2 px-4 py-3 rounded-2xl"
+              className="flex items-end gap-2 px-4 py-3 rounded-2xl transition-shadow shadow-sm focus-within:ring-1 focus-within:ring-[var(--accent)]"
               style={{
-                background: "var(--background)",
+                background: "var(--card)",
                 border: "1.5px solid var(--border)",
-                transition: "border-color 0.2s",
               }}
-              onFocus={() => { }}
             >
               {/* Attach */}
               <input
@@ -1082,20 +1335,42 @@ export default function ChatbotPage() {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={(e) => {
+                onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
+                  const fileName = file.name;
+                  e.target.value = "";
+
                   const now = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
                   setMessages((prev) => [
                     ...prev,
-                    { id: `img-${Date.now()}`, role: "user", type: "image", imageFile: file.name, timestamp: now },
+                    { id: `img-${Date.now()}`, role: "user", type: "image", imageFile: fileName, timestamp: now },
                   ]);
-                  e.target.value = "";
+                  setTyping(true);
+
+                  try {
+                    const response = await sendChatMessage({
+                      message: `[Field Image: ${fileName}] Please inspect this image and advise.`,
+                      conversation_id: activeConversationId,
+                      image_file: fileName,
+                    });
+                    if (response.conversation_id) {
+                      setActiveConversationId(response.conversation_id);
+                    }
+                    loadConversations();
+                    if (response.messages && response.messages.length > 0) {
+                      setMessages(response.messages);
+                    }
+                  } catch (err) {
+                    console.error("Image upload send error:", err);
+                  } finally {
+                    setTyping(false);
+                  }
                 }}
               />
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--secondary)]"
+                className="flex-shrink-0 self-end w-10 h-10 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--secondary)]"
                 title={labels.attach}
                 style={{ color: "var(--muted-foreground)" }}
               >
@@ -1109,8 +1384,6 @@ export default function ChatbotPage() {
                 value={input}
                 onChange={(e) => {
                   setInput(e.target.value);
-                  e.target.style.height = "auto";
-                  e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
                 }}
                 onKeyDown={handleKeyDown}
                 placeholder={labels.placeholder}
@@ -1119,7 +1392,8 @@ export default function ChatbotPage() {
                   color: "var(--foreground)",
                   fontSize: "0.9rem",
                   lineHeight: 1.55,
-                  maxHeight: "120px",
+                  minHeight: "44px",
+                  maxHeight: "144px",
                   overflowY: "auto",
                   scrollbarWidth: "none",
                   paddingTop: "2px",
@@ -1129,7 +1403,7 @@ export default function ChatbotPage() {
               {/* Mic */}
               <button
                 onClick={() => setMicActive((v) => !v)}
-                className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                className="flex-shrink-0 self-end w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
                 title={labels.voice}
                 style={{
                   color: micActive ? "#fff" : "var(--muted-foreground)",
@@ -1141,12 +1415,12 @@ export default function ChatbotPage() {
 
               {/* Send */}
               <button
-                onClick={sendMessage}
-                disabled={!input.trim()}
-                className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-90 disabled:opacity-30"
+                onClick={() => sendMessage()}
+                disabled={!hasInput}
+                className="flex-shrink-0 self-end w-10 h-10 rounded-lg flex items-center justify-center transition-all enabled:hover:opacity-90 enabled:shadow-sm disabled:opacity-35 disabled:cursor-not-allowed"
                 style={{
-                  background: input.trim() ? "var(--primary)" : "var(--muted)",
-                  color: "#fff",
+                  background: hasInput ? "var(--accent)" : "var(--muted)",
+                  color: hasInput ? "#fff" : "var(--muted-foreground)",
                 }}
               >
                 <Send size={17} />
@@ -1169,6 +1443,23 @@ export default function ChatbotPage() {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent className="border border-border bg-[var(--card)] text-[var(--foreground)] sm:max-w-[28rem]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove {deleteTarget?.title ?? "this conversation"} from your recent history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteConversation} className="bg-red-600 text-white hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
